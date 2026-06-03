@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBT SKARIBA – English Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --border: #2a2a32;
+    --accent: #f0c040;
+    --accent2: #5ee7c8;
+    --accent3: #f06060;
+    --text: #e8e8ec;
+    --muted: #888898;
+    --correct: #3dd68c;
+    --wrong: #f06060;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 60px;
+  }
+
+  /* noise overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0;
+  }
+
+  #app { position: relative; z-index: 1; width: 100%; max-width: 720px; }
+
+  /* ── HEADER ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 0 32px;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+  .logo span { color: var(--muted); font-weight: 400; }
+
+  /* ── INTRO ── */
+  #intro { text-align: center; padding: 40px 0; }
+  #intro h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: clamp(2rem, 6vw, 3.2rem);
+    line-height: 1.1; margin-bottom: 16px;
+  }
+  #intro h1 em { color: var(--accent); font-style: normal; }
+  #intro p { color: var(--muted); font-size: 0.9rem; line-height: 1.7; margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto; }
+
+  .badge-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 36px; }
+  .badge {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 99px; padding: 6px 16px; font-size: 0.78rem;
+    color: var(--accent2);
+  }
+
+  /* ── SETTINGS ── */
+  .settings-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px; margin-bottom: 28px;
+    text-align: left;
+  }
+  .settings-card label {
+    display: block; font-size: 0.78rem; color: var(--muted);
+    letter-spacing: 0.1em; margin-bottom: 10px;
+  }
+  .settings-card select, .settings-card input[type=range] {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 10px 12px;
+    font-family: inherit; font-size: 0.88rem;
+    appearance: none; -webkit-appearance: none;
+  }
+  .settings-card select:focus, .settings-card input:focus { outline: 2px solid var(--accent); }
+  .range-val { color: var(--accent); font-size: 0.85rem; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 0.95rem; letter-spacing: 0.05em;
+    padding: 14px 32px; border-radius: var(--radius);
+    cursor: pointer; border: none; transition: transform 0.1s, opacity 0.2s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--accent); color: #0d0d0f; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── PROGRESS ── */
+  .progress-row { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+  .progress-track {
+    flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: var(--accent);
+    border-radius: 2px; transition: width 0.4s cubic-bezier(.4,0,.2,1);
+  }
+  .progress-label { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+
+  /* ── SCORE TICKER ── */
+  .score-ticker {
+    display: flex; gap: 16px; margin-bottom: 28px;
+  }
+  .ticker {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 18px; font-size: 0.78rem;
+    color: var(--muted); text-align: center;
+  }
+  .ticker strong { display: block; font-family: 'Syne', sans-serif; font-size: 1.3rem; color: var(--text); }
+  .ticker.t-correct strong { color: var(--correct); }
+  .ticker.t-wrong strong { color: var(--wrong); }
+  .ticker.t-streak strong { color: var(--accent); }
+
+  /* ── QUESTION CARD ── */
+  #question-area { animation: fadeUp 0.35s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .text-box {
+    background: var(--surface); border-left: 3px solid var(--accent2);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 16px 20px; margin-bottom: 20px;
+    font-size: 0.85rem; line-height: 1.7; color: #c0c0d0;
+    font-style: italic;
+  }
+
+  .q-number {
+    font-size: 0.75rem; color: var(--accent); letter-spacing: 0.12em;
+    margin-bottom: 10px;
+  }
+  .q-text {
+    font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700;
+    line-height: 1.5; margin-bottom: 22px; color: var(--text);
+  }
+
+  /* ── OPTIONS ── */
+  .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .opt {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 18px;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    position: relative;
+  }
+  .opt:hover:not(.disabled) { border-color: var(--accent); background: #1c1c24; transform: translateX(4px); }
+  .opt-key {
+    width: 28px; height: 28px; min-width: 28px;
+    border: 1px solid var(--border); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; color: var(--muted); font-weight: 500;
+    transition: all 0.15s;
+  }
+  .opt-text { font-size: 0.9rem; line-height: 1.5; }
+  .opt.disabled { pointer-events: none; }
+  .opt.correct { border-color: var(--correct); background: rgba(61,214,140,0.07); }
+  .opt.correct .opt-key { background: var(--correct); border-color: var(--correct); color: #0d0d0f; }
+  .opt.wrong { border-color: var(--wrong); background: rgba(240,96,96,0.07); }
+  .opt.wrong .opt-key { background: var(--wrong); border-color: var(--wrong); color: #fff; }
+
+  /* ── FEEDBACK ── */
+  .feedback {
+    display: none; align-items: center; gap: 12px;
+    padding: 14px 18px; border-radius: var(--radius);
+    margin-bottom: 20px; font-size: 0.88rem;
+  }
+  .feedback.show { display: flex; }
+  .feedback.ok { background: rgba(61,214,140,0.1); border: 1px solid rgba(61,214,140,0.3); color: var(--correct); }
+  .feedback.no { background: rgba(240,96,96,0.1); border: 1px solid rgba(240,96,96,0.3); color: var(--wrong); }
+  .feedback-icon { font-size: 1.2rem; }
+
+  /* ── NAV ── */
+  .nav-row { display: flex; justify-content: flex-end; gap: 10px; }
+
+  /* ── TIMER ── */
+  .timer-ring { position: relative; width: 44px; height: 44px; }
+  .timer-ring svg { transform: rotate(-90deg); }
+  .timer-ring circle { fill: none; stroke-width: 3; }
+  .ring-bg { stroke: var(--border); }
+  .ring-fill { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.3s; }
+  .timer-num {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 0.82rem; font-weight: 700;
+  }
+
+  /* ── RESULTS ── */
+  #results { text-align: center; padding: 20px 0; animation: fadeUp 0.5s ease; }
+  #results h2 {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: clamp(2rem, 6vw, 3rem); margin-bottom: 8px;
+  }
+  .grade-tag {
+    display: inline-block;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.8rem;
+    padding: 8px 28px; border-radius: 99px; margin-bottom: 24px;
+  }
+  .grade-S { background: var(--accent); color: #0d0d0f; }
+  .grade-A { background: var(--correct); color: #0d0d0f; }
+  .grade-B { background: var(--accent2); color: #0d0d0f; }
+  .grade-C { background: var(--muted); color: #fff; }
+  .grade-D { background: var(--wrong); color: #fff; }
+
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    margin-bottom: 32px;
+  }
+  .stat-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 12px;
+  }
+  .stat-box .num {
+    font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800;
+    display: block; margin-bottom: 4px;
+  }
+  .stat-box .lbl { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.1em; }
+
+  .review-section { text-align: left; margin-bottom: 32px; }
+  .review-section h3 {
+    font-family: 'Syne', sans-serif; font-size: 0.85rem;
+    letter-spacing: 0.1em; color: var(--muted); margin-bottom: 14px;
+  }
+  .review-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 8px;
+    font-size: 0.82rem; line-height: 1.5;
+  }
+  .review-item.r-ok { border-left: 3px solid var(--correct); }
+  .review-item.r-no { border-left: 3px solid var(--wrong); }
+  .review-num { color: var(--muted); min-width: 28px; }
+  .review-q { flex: 1; color: var(--text); }
+  .review-ans { display: flex; flex-direction: column; gap: 2px; min-width: 80px; text-align: right; }
+  .r-your { color: var(--wrong); font-size: 0.78rem; }
+  .r-correct { color: var(--correct); font-size: 0.78rem; }
+
+  .result-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* ── MISC ── */
+  .hidden { display: none !important; }
+  .streak-pop {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
+    background: var(--accent); color: #0d0d0f;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2rem;
+    padding: 18px 40px; border-radius: var(--radius);
+    pointer-events: none; z-index: 100;
+    transition: transform 0.2s, opacity 0.3s;
+    opacity: 0;
+  }
+  .streak-pop.active { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">CBT <span>SKARIBA</span></div>
+    <div id="header-timer" class="hidden">
+      <div class="timer-ring">
+        <svg width="44" height="44" viewBox="0 0 44 44">
+          <circle class="ring-bg" cx="22" cy="22" r="18" />
+          <circle class="ring-fill" id="ring" cx="22" cy="22" r="18"
+            stroke-dasharray="113" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-num" id="timer-num">30</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- INTRO -->
+  <div id="intro">
+    <h1>English<br><em>Quiz Game</em></h1>
+    <p>Uji pemahamanmu soal Descriptive, Procedure, dan Argumentative Text. 50 soal pilihan ganda.</p>
+    <div class="badge-row">
+      <span class="badge">50 Soal</span>
+      <span class="badge">Pilihan Ganda</span>
+      <span class="badge">SAS 2025/2026</span>
+    </div>
+
+    <div class="settings-card">
+      <label>JUMLAH SOAL</label>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+        <input type="range" id="num-q" min="5" max="50" step="5" value="20">
+        <span class="range-val" id="num-q-val">20 soal</span>
+      </div>
+      <label>WAKTU PER SOAL</label>
+      <select id="time-mode">
+        <option value="0">Tanpa batas waktu</option>
+        <option value="30" selected>30 detik per soal</option>
+        <option value="60">60 detik per soal</option>
+        <option value="20">20 detik per soal</option>
+      </select>
+    </div>
+
+    <button class="btn btn-primary" onclick="startGame()">▶ Mulai Quiz</button>
+  </div>
+
+  <!-- GAME -->
+  <div id="game" class="hidden">
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      <span class="progress-label" id="prog-label">1 / 20</span>
+    </div>
+    <div class="score-ticker">
+      <div class="ticker t-correct"><strong id="s-correct">0</strong>Benar</div>
+      <div class="ticker t-wrong"><strong id="s-wrong">0</strong>Salah</div>
+      <div class="ticker t-streak"><strong id="s-streak">0</strong>Streak 🔥</div>
+      <div class="ticker"><strong id="s-score">0</strong>Poin</div>
+    </div>
+
+    <div id="question-area"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results" class="hidden"></div>
+</div>
+
+<div class="streak-pop" id="streak-pop"></div>
+
+<script>
+const ALL_QUESTIONS = [
+  {q:"What is the main idea of the text?",text:"The school library is a bright and quiet room. It has wide tables, soft chairs, and tall bookshelves. Students come here to read, study, or borrow books.",opts:["A. How to arrange books","B. Description of the school library","C. Students' hobbies","D. How to borrow books","E. The importance of reading"],ans:1},
+  {q:'The word "bright" in the text refers to…',opts:["A. Noisy","B. Peaceful","C. Full of light","D. Empty","E. Small"],ans:2},
+  {q:"The purpose of the text is to…",opts:["A. Tell how to use the library","B. Describe a place","C. Argue about the library","D. Explain a process","E. Compare two rooms"],ans:1},
+  {q:"Which language feature is used in descriptive text?",opts:["A. Imperative verbs","B. Connectors of sequence","C. Mental verbs","D. Adjectives","E. Modal verbs"],ans:3},
+  {q:'"It has wide tables…" → This sentence shows…',opts:["A. Identification","B. Complication","C. Evaluation","D. Reiteration","E. Description"],ans:4},
+  {q:"What is described in the text?",text:"My cat, Milo, is small and fluffy. His fur is white with grey spots. Milo loves sleeping on my lap and playing with ribbons.",opts:["A. A pet cat","B. A wild animal","C. A toy","D. A friend","E. A ribbon"],ans:0},
+  {q:"The writer's attitude toward Milo is…",opts:["A. Afraid","B. Annoyed","C. Confused","D. Caring","E. Angry"],ans:3},
+  {q:'"Small and fluffy" is an example of…',opts:["A. Adverb","B. Noun phrase","C. Action verb","D. Adjective phrase","E. Modal phrase"],ans:3},
+  {q:"The structure of descriptive text is…",opts:["A. Goal – Steps","B. Statement – Arguments – Conclusion","C. Identification – Description","D. Orientation – Events – Reorientation","E. Thesis – Reiteration"],ans:2},
+  {q:"The purpose of descriptive text is to…",opts:["A. Tell how to do something","B. Argue for or against something","C. Describe a person, place, or thing","D. Retell an experience","E. Show similarities"],ans:2},
+  {q:"What is the goal of the text?",text:"How to Make Iced Tea: 1. Boil water. 2. Add tea leaves or a tea bag. 3. Let it cool. 4. Add ice and sugar. 5. Serve cold.",opts:["A. To describe iced tea","B. To explain why tea is healthy","C. To show how to make iced tea","D. To compare types of tea","E. To persuade people to drink tea"],ans:2},
+  {q:"The text uses many…",opts:["A. Adjectives","B. Past verbs","C. Imperatives","D. Modals","E. Linking verbs"],ans:2},
+  {q:'"Add ice and sugar" is a…',opts:["A. Material","B. Identification","C. Step","D. Conclusion","E. Description"],ans:2},
+  {q:"Which one is NOT a feature of procedure text?",opts:["A. Imperative verbs","B. Adverbs of time","C. Steps in order","D. Arguments","E. Materials"],ans:3},
+  {q:"The structure of procedure text is…",opts:["A. Orientation – Events – Reorientation","B. Goal – Materials – Steps","C. Identification – Description","D. Issue – Arguments – Conclusion","E. Thesis – Reiteration"],ans:1},
+  {q:"What is the writer explaining?",text:"How to Save a Document on a Computer: 1. Click 'File'. 2. Choose 'Save As'. 3. Type the file name. 4. Select the folder. 5. Click 'Save'.",opts:["A. How to open a document","B. How to create a computer","C. How to save a document","D. How to use a keyboard","E. How to print a file"],ans:2},
+  {q:"The text is written to…",opts:["A. Tell a story","B. Describe a tool","C. Give instructions","D. Argue about technology","E. Promote software"],ans:2},
+  {q:'The word "click" is…',opts:["A. Modal","B. Noun","C. Adjective","D. Verb","E. Adverb"],ans:3},
+  {q:"Which sentence uses an imperative verb?",opts:['A. You should save your file.',"B. The computer saves the file.",'C. Click "Save".',"D. The file is important.","E. Saving files is useful."],ans:2},
+  {q:"The text belongs to…",opts:["A. Descriptive","B. Procedure","C. Narrative","D. Argumentative","E. Explanation"],ans:1},
+  {q:"What is the writer's opinion?",text:"Online learning is more flexible than traditional classes. Students can study anytime and anywhere. However, some students become less disciplined. Schools should combine online and offline learning to balance flexibility and responsibility.",opts:["A. Online learning is useless","B. Offline learning is the best","C. Schools should mix both methods","D. Students prefer offline learning","E. Online learning is dangerous"],ans:2},
+  {q:"What is the issue discussed?",opts:["A. School uniforms","B. Online vs offline learning","C. Teacher salaries","D. Homework","E. Exams"],ans:1},
+  {q:"Which sentence is the argument?",opts:["A. Online learning is more flexible","B. Schools should combine both","C. Students must study every day","D. Offline learning is boring","E. Some students like gadgets"],ans:0},
+  {q:"The structure of an argumentative text is…",opts:["A. Goal – Steps","B. Identification – Description","C. Thesis – Arguments – Conclusion","D. Orientation – Evaluation","E. Issue – Events – Resolution"],ans:2},
+  {q:"The purpose of argumentative text is to…",opts:["A. Entertain","B. Describe","C. Persuade","D. Retell","E. Announce"],ans:2},
+  {q:"What is the writer arguing for?",text:"School uniforms should be required because they reduce bullying and help students focus on learning. Uniforms also create equality among students.",opts:["A. Removing uniforms","B. Changing school rules","C. Requiring school uniforms","D. Allowing casual clothes","E. Using expensive clothes"],ans:2},
+  {q:'"Reduce bullying" is…',opts:["A. Thesis","B. Argument","C. Rebuttal","D. Conclusion","E. Description"],ans:1},
+  {q:"Which language feature is used?",opts:["A. Simple past","B. Imperatives","C. Modal verbs","D. Figurative language","E. Repetition"],ans:2},
+  {q:"What is the conclusion of the text?",opts:["A. Uniforms are expensive","B. Students want fashion","C. Uniforms create equality","D. Schools should ban uniforms","E. Students are bullied"],ans:2},
+  {q:"The text is categorized as…",opts:["A. Descriptive","B. Procedure","C. Argumentative","D. Explanation","E. Narrative"],ans:2},
+  {q:"Which text type uses adjectives to describe appearance?",opts:["A. Procedure","B. Argumentative","C. Descriptive","D. Explanation","E. Review"],ans:2},
+  {q:"Which text uses imperative verbs?",opts:["A. Narrative","B. Procedure","C. Argumentative","D. Descriptive","E. Report"],ans:1},
+  {q:'"Firstly, boil the water" uses a…',opts:["A. Time connector","B. Adjective clause","C. Verb to be","D. Passive voice","E. Relative clause"],ans:0},
+  {q:'"I believe online classes help students." → This sentence shows…',opts:["A. Fact","B. Description","C. Opinion","D. Step","E. Identification"],ans:2},
+  {q:"The purpose of descriptive text is to…",opts:["A. Explain","B. Argue","C. Describe","D. Retell","E. Compare"],ans:2},
+  {q:"The structure of descriptive text begins with…",opts:["A. Materials","B. Identification","C. Issue","D. Conclusion","E. Thesis"],ans:1},
+  {q:"Which feature belongs to argumentative text?",opts:["A. Adjectives","B. Simple past","C. Imperatives","D. Opinions","E. Ingredients"],ans:3},
+  {q:'"Add two spoons of sugar." → This sentence is for…',opts:["A. Procedure","B. Descriptive","C. Argumentative","D. Narrative","E. Report"],ans:0},
+  {q:'"The park is peaceful and green." → This is…',opts:["A. Argument","B. Step","C. Description","D. Purpose","E. Orientation"],ans:2},
+  {q:'"In conclusion, uniforms are important." → This part is…',opts:["A. Arguments","B. Thesis","C. Conclusion","D. Step","E. Identification"],ans:2},
+  {q:"Language feature of procedure text includes…",opts:["A. Past tense","B. Adjectives","C. Imperatives","D. Dialogues","E. Repetition"],ans:2},
+  {q:'"Students should study harder." The word "should" expresses…',opts:["A. Past event","B. Obligation","C. Description","D. Instruction","E. Narrative action"],ans:1},
+  {q:'"The rice is cooked in a rice cooker." → This is…',opts:["A. Active voice","B. Passive voice","C. Adjective phrase","D. Modal phrase","E. Imperative"],ans:1},
+  {q:"Which part of argument text states the writer's main idea?",opts:["A. Steps","B. Identification","C. Thesis","D. Orientation","E. Reorientation"],ans:2},
+  {q:"Which one is NOT in descriptive text?",opts:["A. Appearance","B. Characteristics","C. Steps","D. Location","E. Qualities"],ans:2},
+  {q:'"I strongly agree that…" belongs to…',opts:["A. Description","B. Step","C. Opinion","D. Identification","E. Material"],ans:2},
+  {q:'"Next, stir the mixture well." → The word "Next" is…',opts:["A. Conjunction","B. Time connector","C. Adjective","D. Modal","E. Noun"],ans:1},
+  {q:'"Her eyes are bright blue." describes…',opts:["A. Action","B. Process","C. Opinion","D. Appearance","E. Setting"],ans:3},
+  {q:'"To describe a place" is the purpose of…',opts:["A. Descriptive","B. Narrative","C. Argumentative","D. Procedure","E. Explanation"],ans:0},
+  {q:'"Uniforms create discipline." This sentence is used in…',opts:["A. Procedure","B. Argumentative","C. Narrative","D. Recount","E. Announcement"],ans:1},
+];
+
+let gameQ = [], cur = 0, correct = 0, wrong = 0, streak = 0, maxStreak = 0, score = 0;
+let timeLimit = 30, timer = null, timeLeft = 0;
+let answered = false;
+let userAnswers = [];
+
+const C = 113; // circumference
+
+// Inputs
+document.getElementById('num-q').addEventListener('input', function(){
+  document.getElementById('num-q-val').textContent = this.value + ' soal';
+});
+
+function startGame() {
+  const n = parseInt(document.getElementById('num-q').value);
+  timeLimit = parseInt(document.getElementById('time-mode').value);
+
+  // shuffle & pick n
+  const shuffled = [...ALL_QUESTIONS].sort(() => Math.random()-0.5);
+  gameQ = shuffled.slice(0, n);
+  cur = 0; correct = 0; wrong = 0; streak = 0; maxStreak = 0; score = 0;
+  userAnswers = new Array(n).fill(null);
+
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  if (timeLimit > 0) document.getElementById('header-timer').classList.remove('hidden');
+
+  renderQ();
+}
+
+function renderQ() {
+  answered = false;
+  const q = gameQ[cur];
+  const total = gameQ.length;
+
+  // progress
+  document.getElementById('prog-fill').style.width = (cur/total*100)+'%';
+  document.getElementById('prog-label').textContent = (cur+1)+' / '+total;
+
+  // score
+  document.getElementById('s-correct').textContent = correct;
+  document.getElementById('s-wrong').textContent = wrong;
+  document.getElementById('s-streak').textContent = streak;
+  document.getElementById('s-score').textContent = score;
+
+  // build html
+  let html = `<div id="question-area" style="animation:fadeUp 0.35s ease">`;
+  if (q.text) html += `<div class="text-box">${q.text}</div>`;
+  html += `<div class="q-number">SOAL ${cur+1} / ${total}</div>`;
+  html += `<div class="q-text">${q.q}</div>`;
+  html += `<div class="options">`;
+  q.opts.forEach((o,i) => {
+    const key = ['A','B','C','D','E'][i];
+    html += `<div class="opt" id="opt${i}" onclick="choose(${i})">
+      <div class="opt-key">${key}</div>
+      <div class="opt-text">${o.slice(3)}</div>
+    </div>`;
+  });
+  html += `</div>`;
+  html += `<div class="feedback" id="feedback"><span class="feedback-icon" id="fb-icon"></span><span id="fb-msg"></span></div>`;
+  html += `<div class="nav-row">
+    <button class="btn btn-ghost hidden" id="btn-skip" onclick="skipQ()">Lewati</button>
+    <button class="btn btn-primary hidden" id="btn-next" onclick="nextQ()">Soal Berikutnya →</button>
+  </div></div>`;
+
+  document.getElementById('game').querySelector('#question-area') && document.getElementById('game').removeChild(document.getElementById('question-area'));
+
+  const gameDiv = document.getElementById('game');
+  gameDiv.insertAdjacentHTML('beforeend', html);
+
+  if (timeLimit > 0) startTimer();
+}
+
+function startTimer() {
+  clearInterval(timer);
+  timeLeft = timeLimit;
+  updateRing();
+  timer = setInterval(() => {
+    timeLeft--;
+    updateRing();
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      if (!answered) timeUp();
+    }
+  }, 1000);
+}
+
+function updateRing() {
+  const pct = timeLeft / timeLimit;
+  const offset = C * (1 - pct);
+  document.getElementById('ring').style.strokeDashoffset = offset;
+  document.getElementById('timer-num').textContent = timeLeft;
+  const col = pct > 0.5 ? 'var(--accent)' : pct > 0.25 ? '#f09030' : 'var(--wrong)';
+  document.getElementById('ring').style.stroke = col;
+}
+
+function timeUp() {
+  answered = true;
+  wrong++;
+  streak = 0;
+  document.querySelectorAll('.opt').forEach(o => o.classList.add('disabled'));
+  document.getElementById('opt'+gameQ[cur].ans).classList.add('correct');
+  showFeedback(false, '⏰ Waktu habis! Jawaban: '+['A','B','C','D','E'][gameQ[cur].ans]);
+  showNext();
+}
+
+function choose(i) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timer);
+  userAnswers[cur] = i;
+
+  const q = gameQ[cur];
+  document.querySelectorAll('.opt').forEach(o => o.classList.add('disabled'));
+
+  if (i === q.ans) {
+    document.getElementById('opt'+i).classList.add('correct');
+    correct++;
+    streak++;
+    maxStreak = Math.max(maxStreak, streak);
+    const bonus = streak >= 5 ? 150 : streak >= 3 ? 120 : 100;
+    score += bonus;
+    showFeedback(true, streak >= 3 ? `🔥 ${streak}x streak! +${bonus} poin` : `✓ Benar! +${bonus} poin`);
+    if (streak === 3 || streak === 5 || streak === 10) popStreak(streak);
+  } else {
+    document.getElementById('opt'+i).classList.add('wrong');
+    document.getElementById('opt'+q.ans).classList.add('correct');
+    wrong++;
+    streak = 0;
+    showFeedback(false, `✗ Salah. Jawaban: ${['A','B','C','D','E'][q.ans]}`);
+  }
+
+  document.getElementById('s-correct').textContent = correct;
+  document.getElementById('s-wrong').textContent = wrong;
+  document.getElementById('s-streak').textContent = streak;
+  document.getElementById('s-score').textContent = score;
+
+  showNext();
+}
+
+function showFeedback(ok, msg) {
+  const el = document.getElementById('feedback');
+  el.className = 'feedback show ' + (ok ? 'ok' : 'no');
+  document.getElementById('fb-msg').textContent = msg;
+}
+
+function showNext() {
+  const isLast = cur >= gameQ.length - 1;
+  const btn = document.getElementById('btn-next');
+  btn.classList.remove('hidden');
+  btn.textContent = isLast ? '📊 Lihat Hasil' : 'Soal Berikutnya →';
+}
+
+function nextQ() {
+  clearInterval(timer);
+  cur++;
+  if (cur >= gameQ.length) { showResults(); return; }
+  const qa = document.getElementById('question-area');
+  if (qa) qa.remove();
+  renderQ();
+}
+
+function popStreak(n) {
+  const el = document.getElementById('streak-pop');
+  el.textContent = `🔥 ${n}x STREAK!`;
+  el.classList.add('active');
+  setTimeout(() => el.classList.remove('active'), 1200);
+}
+
+function showResults() {
+  clearInterval(timer);
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('header-timer').classList.add('hidden');
+
+  const total = gameQ.length;
+  const pct = Math.round(correct / total * 100);
+  let grade, gClass;
+  if (pct >= 90) { grade = 'S'; gClass = 'grade-S'; }
+  else if (pct >= 80) { grade = 'A'; gClass = 'grade-A'; }
+  else if (pct >= 70) { grade = 'B'; gClass = 'grade-B'; }
+  else if (pct >= 60) { grade = 'C'; gClass = 'grade-C'; }
+  else { grade = 'D'; gClass = 'grade-D'; }
+
+  const msg = pct>=90 ? 'Luar biasa! 🎉' : pct>=70 ? 'Bagus sekali! 👏' : pct>=50 ? 'Cukup baik, terus belajar! 💪' : 'Jangan menyerah, coba lagi! 📖';
+
+  // wrong items
+  const wrongItems = gameQ.map((q,i)=>({q,i,ua:userAnswers[i]})).filter(x=>x.ua!==x.q.ans);
+  const correctItems = gameQ.map((q,i)=>({q,i,ua:userAnswers[i]})).filter(x=>x.ua===x.q.ans);
+
+  let reviewHTML = '';
+  if (wrongItems.length > 0) {
+    reviewHTML += `<div class="review-section"><h3>SOAL YANG SALAH (${wrongItems.length})</h3>`;
+    wrongItems.forEach(({q,i,ua}) => {
+      const uaLabel = ua === null ? 'Tidak dijawab' : ['A','B','C','D','E'][ua];
+      const ansLabel = ['A','B','C','D','E'][q.ans];
+      reviewHTML += `<div class="review-item r-no">
+        <div class="review-num">${i+1}.</div>
+        <div class="review-q">${q.q}</div>
+        <div class="review-ans"><span class="r-your">Kamu: ${uaLabel}</span><span class="r-correct">Benar: ${ansLabel}</span></div>
+      </div>`;
+    });
+    reviewHTML += '</div>';
+  }
+
+  const el = document.getElementById('results');
+  el.innerHTML = `
+    <h2>${msg}</h2>
+    <div class="grade-tag ${gClass}">Grade ${grade}</div>
+    <div class="stats-grid">
+      <div class="stat-box"><span class="num" style="color:var(--accent)">${pct}%</span><span class="lbl">SKOR</span></div>
+      <div class="stat-box"><span class="num" style="color:var(--correct)">${correct}</span><span class="lbl">BENAR</span></div>
+      <div class="stat-box"><span class="num" style="color:var(--wrong)">${wrong}</span><span class="lbl">SALAH</span></div>
+      <div class="stat-box"><span class="num" style="color:var(--accent2)">${score}</span><span class="lbl">POIN TOTAL</span></div>
+      <div class="stat-box"><span class="num" style="color:var(--accent)">${maxStreak}🔥</span><span class="lbl">MAX STREAK</span></div>
+      <div class="stat-box"><span class="num">${total}</span><span class="lbl">TOTAL SOAL</span></div>
+    </div>
+    ${reviewHTML}
+    <div class="result-btns">
+      <button class="btn btn-primary" onclick="location.reload()">🔄 Main Lagi</button>
+    </div>
+  `;
+  el.classList.remove('hidden');
+}
+</script>
+</body>
+</html>
